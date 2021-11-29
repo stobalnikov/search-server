@@ -368,6 +368,40 @@ void TestExcludeStopWordsFromAddedDocumentContent() {
 
 //Добавление документов. Добавленный документ должен находиться по поисковому запросу, который содержит слова из документа.
 void TestAddDocument() {
+
+        const std::vector<int> ratings = { 1 };
+        const int document_id = 42;
+        const std::string content1 = "cat in the city";
+        const std::string content2 = "dog was found";
+
+        
+            SearchServer server;
+
+            server.AddDocument(document_id, content1, DocumentStatus::ACTUAL, ratings);
+            server.AddDocument(document_id + 1, content2, DocumentStatus::ACTUAL, ratings);
+
+            ASSERT_EQUAL_HINT(server.GetDocumentCount(), 2, "AddDocument doesn't add documents properly");
+
+            {
+                const std::vector<Document>& result = server.FindTopDocuments(content1);
+
+                ASSERT_EQUAL_HINT(result.size(), 1, "Document doesn't match itself");
+                ASSERT_EQUAL_HINT(result[0].id, document_id, "Document content matches content of other document");
+            }
+
+            {
+                const std::vector<Document>& result = server.FindTopDocuments(content2);
+
+                ASSERT_EQUAL_HINT(result.size(), 1, "Document doesn't match itself");
+                ASSERT_EQUAL_HINT(result[0].id, (document_id + 1),
+                    "Document content matches content of other document");
+
+            }
+
+            ASSERT_HINT(server.FindTopDocuments("nothing here").empty(),
+                "FindTopDocuments matches documents it must not match");
+        
+    
 }
 
 //Поддержка минус-слов. Документы, содержащие минус-слова из поискового запроса, не должны включаться в результаты поиска.
